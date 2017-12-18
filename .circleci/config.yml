@@ -10,6 +10,7 @@ jobs:
       - restore_cache:
           keys:
             - v1-{{ .Branch }}
+            - v1-master
           paths:
             - /caches/image.tar
       - run:
