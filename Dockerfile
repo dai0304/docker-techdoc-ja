@@ -2,7 +2,7 @@ FROM node:9.3.0
 
 LABEL maintainer "Daisuke Miyamoto <dai.0304@gmail.com>"
 
-# install Java (for plantuml)
+# install Java (for plantuml, RedPen)
 RUN echo "deb http://http.debian.net/debian jessie-backports main" >>/etc/apt/sources.list
 RUN apt-get clean && apt-get update
 RUN apt-get install -y -qq -t jessie-backports openjdk-8-jdk
@@ -30,6 +30,10 @@ RUN apt-get install -y fonts-migmix
 ## setup locale (for plantuml)
 RUN apt-get install -y locales-all
 ENV LANG ja_JP.UTF-8
+
+# install RedPen
+RUN wget -nv -O - https://github.com/redpen-cc/redpen/releases/download/redpen-1.10.1/redpen-1.10.1.tar.gz | tar zx -C /opt
+ENV PATH $PATH:/opt/redpen-distribution-1.10.1/bin
 
 # install textlint
 RUN npm install -g \
