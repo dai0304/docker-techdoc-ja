@@ -31,15 +31,3 @@ jobs:
           key: v1-{{ .Branch }}-{{ epoch }}
           paths:
             - /caches/image.tar
-      - deploy:
-          name: Push Docker image
-          command: |
-            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              docker tag app dai0304/techdoc-ja:latest
-              docker push dai0304/techdoc-ja:latest
-            else
-              TAG=$(git describe --always)
-              docker tag app dai0304/techdoc-ja:${TAG}
-              docker push dai0304/techdoc-ja:${TAG}
-            fi
