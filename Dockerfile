@@ -2,40 +2,43 @@ FROM node:9.3.0
 
 LABEL maintainer "Daisuke Miyamoto <dai.0304@gmail.com>"
 
-# install Java (for plantuml, RedPen)
-RUN echo "deb http://http.debian.net/debian jessie-backports main" >>/etc/apt/sources.list
-RUN apt-get clean && apt-get update
-RUN apt-get install -y -qq -t jessie-backports openjdk-8-jdk
-RUN update-java-alternatives --set java-1.8.0-openjdk-amd64
 
-# install AWS CLI (for deploy)
-RUN apt-get install -y -qq python3-pip
-RUN pip3 install awscli
+###############################################################################
+## setup
 
-# install gitbook
-RUN npm install -g gitbook-cli && gitbook fetch 3.2.2
-
-# install caribre
-RUN wget -nv -P /tmp/ https://raw.githubusercontent.com/kovidgoyal/calibre/master/setup/linux-installer.py
-RUN python -c "import sys; main=lambda x,y:sys.stderr.write('Download failed\n'); exec(sys.stdin.read()); main('/opt', True)" < /tmp/linux-installer.py
-ENV PATH $PATH:/opt/calibre
-
-# install plantuml
-RUN npm install -g gitbook-plugin-uml
-RUN apt-get install -y graphviz
-
-# install MigMix font
-RUN apt-get install -y fonts-migmix
-
-## setup locale (for plantuml)
-RUN apt-get install -y locales-all
 ENV LANG ja_JP.UTF-8
+RUN echo "deb http://http.debian.net/debian jessie-backports main" >>/etc/apt/sources.list \
+  && apt-get clean \
+  && apt-get update \
+  && apt-get install -y locales-all
 
+
+###############################################################################
+# install Java (for PlantUML, RedPen)
+
+RUN apt-get install -y -qq -t jessie-backports openjdk-8-jdk \
+  && update-java-alternatives --set java-1.8.0-openjdk-amd64
+
+
+###############################################################################
+# install AWS CLI (for deploy)
+
+RUN apt-get install -y -qq python3-pip \
+  && pip3 install awscli
+
+
+###############################################################################
 # install RedPen
-RUN wget -nv -O - https://github.com/redpen-cc/redpen/releases/download/redpen-1.10.1/redpen-1.10.1.tar.gz | tar zx -C /opt
-ENV PATH $PATH:/opt/redpen-distribution-1.10.1/bin
 
+ENV REDPEN_VERSION 1.10.1
+
+RUN wget -nv -O - https://github.com/redpen-cc/redpen/releases/download/redpen-${REDPEN_VERSION}/redpen-${REDPEN_VERSION}.tar.gz | tar zx -C /opt
+ENV PATH $PATH:/opt/redpen-distribution-${REDPEN_VERSION}/bin
+
+
+###############################################################################
 # install textlint
+
 RUN npm install -g \
     textlint \
     textlint-rule-no-todo \
@@ -74,11 +77,6 @@ RUN npm install -g \
     textlint-rule-max-appearence-count-of-words \
     textlint-rule-max-length-of-title \
     textlint-rule-incremental-headers \
-#    textlint-rule-hyogai-onkun \
-#    textlint-rule-ja-hiragana-keishikimeishi \
-#    textlint-rule-ja-hiragana-daimeishi \
-#    textlint-rule-ja-hiragana-fukushi \
-#    textlint-rule-ja-hiragana-hojodoushi \
     textlint-rule-ja-unnatural-alphabet \
     @textlint-ja/textlint-rule-no-insert-dropping-sa \
     textlint-rule-preset-ja-technical-writing \
@@ -88,3 +86,29 @@ RUN npm install -g \
     textlint-filter-rule-whitelist \
     textlint-filter-rule-comments \
     textlint-filter-rule-node-types
+
+
+###############################################################################
+# install gitbook
+
+RUN npm install -g gitbook-cli && gitbook fetch 3.2.2
+
+###############################################################################
+# install Japanese font (for PDF)
+
+RUN apt-get install -y -qq fonts-migmix
+
+
+###############################################################################
+# install graphviz (for PlantUML)
+
+RUN apt-get install -y -qq graphviz
+
+
+###############################################################################
+# install Caribre (for PDF)
+
+ENV CALIBRE_INSTALLER_SOURCE_CODE_URL https://raw.githubusercontent.com/kovidgoyal/calibre/master/setup/linux-installer.py
+
+RUN wget -O - ${CALIBRE_INSTALLER_SOURCE_CODE_URL} | python -c "import sys; main=lambda:sys.stderr.write('Download failed\n'); exec(sys.stdin.read()); main(install_dir='/opt', isolated=True)"
+ENV PATH $PATH:/opt/calibre/bin
